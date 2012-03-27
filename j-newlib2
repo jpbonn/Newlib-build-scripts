@@ -1,0 +1,49 @@
+#from Milkymist SOC software:
+# Mico32 toolchain
+#
+AS=lm32-rtems4.11-as
+#CC=lm32-rtems4.11-gcc
+LD=lm32-rtems4.11-ld
+OBJCOPY=lm32-rtems4.11-objcopy
+AR=lm32-rtems4.11-ar
+RANLIB=lm32-rtems4.11-ranlib
+
+CC="clang -O0 -march=mico32 -ccc-host-triple mico32-elf -ccc-gcc-name lm32-rtems4.11-gcc"
+
+# rtems newlib configure:
+#/home/jpbonn/Documents/mico32/lm32-gcc/src/gcc-4.5.3/newlib/configure --cache-file=./config.cache --with-newlib --enable-multilib --with-cross-host=x86_64-unknown-linux-gnu --prefix=/home/jpbonn/Documents/mico32/lm32-gcc/install --disable-libssp --enable-languages=c --program-transform-name=s&^&lm32-elf-& --disable-option-checking --with-target-subdir=lm32-elf --build=x86_64-unknown-linux-gnu --host=lm32-elf --target=lm32-elf --srcdir=../../../src/gcc-4.5.3/newlib
+
+
+
+# Toolchain options
+#
+#INCLUDES=-I$(MMDIR)/software/include -I$(MMDIR)/software/include/base -I$(MMDIR)/tools
+#ASFLAGS=$(INCLUDES) -nostdinc
+#CFLAGS=-O9 -nostdinc -Wall -mbarrel-shift-enabled -mmultiply-enabled -mdivide-enabled -msign-extend-enabled -fno-builtin -fsigned-char -fsingle-precision-constant $(INCLUDES)
+#LDFLAGS=-nostdlib -nodefaultlibs
+
+# Joel's RTEMS script:
+#  CC="clang -ccc-host-triple ${CPU}-rtems4.11 -ccc-gcc-name ${CPU}-rtems4.11-gcc" \
+#  CC_FOR_TARGET="clang -ccc-host-triple ${CPU}-rtems4.11 -ccc-gcc-name ${CPU}-rtems4.11-gcc" \
+CPU=lm32
+../newlib-1.19.0/configure \
+  --with-cross-host=x86_64-unknown-linux-gnu --build=x86_64-unknown-linux-gnu \
+  --host=lm32-elf --target=lm32-elf \
+  --with-target-subdir=lm32-elf \
+  --disable-libssp --enable-languages=c \
+  --prefix=`pwd`/install \
+  --with-newlib \
+  CFLAGS="-O0 -g" \
+  CC="clang -march=mico32 -ccc-host-triple mico32-elf -ccc-gcc-name lm32-rtems4.11-gcc" \
+  CC_FOR_TARGET="clang -march=mico32 -ccc-host-triple mico32-elf -ccc-gcc-name lm32-rtems4.11-gcc" \
+  CC_FOR_BUILD="clang " \
+  PONIES=true \
+  LD=lm32-rtems4.11-ld \
+  OBJCOPY=lm32-rtems4.11-objcopy \
+  RANLIB=lm32-rtems4.11-ranlib \
+  AR=${CPU}-rtems4.11-ar \
+  AS=${CPU}-rtems4.11-as && \
+make -j4 && \
+make install 
+
+echo $?
