@@ -17,7 +17,7 @@ The Newlib build process depends on the gcc-lm32 tool chain for the linker, asse
 4)    Configure libgloss:
         # mkdir $NEWLIBTOP/build-libgloss
         # cd $NEWLIBTOP/build-libgloss
-        # ../j-newlib2
+        # ../j-liblg2
 
 5)    Edit the libgloss Makefile:
         add $NEWLIBTOP/build/install/lm32-elf/include to the INCLUDES variable in the Makefile
