@@ -1,0 +1,40 @@
+# Derived from Joel's RTEMS script:
+#  CC="clang -target ${CPU}-rtems4.11 -ccc-gcc-name ${CPU}-rtems4.11-gcc" \
+#  CC_FOR_TARGET="clang -target ${CPU}-rtems4.11 -ccc-gcc-name ${CPU}-rtems4.11-gcc" \
+INSTALL_DIR=`pwd`/install
+mkdir $INSTALL_DIR
+mkdir $INSTALL_DIR/lib
+mkdir libc-bld
+(cd libc-bld &&
+../newlib-1.19.0/configure \
+  --with-cross-host=x86_64-unknown-linux-gnu --build=x86_64-unknown-linux-gnu \
+  --host=lm32-elf --target=lm32-elf \
+  --with-target-subdir=lm32-elf \
+  --disable-libssp --enable-languages=c \
+  --prefix=$INSTALL_DIR \
+  --with-newlib \
+  CFLAGS="-O0 -g" \
+  CC="clang -ffreestanding -march=lm32 -target lm32 -ccc-gcc-name lm32-rtems4.11-gcc" \
+  CC_FOR_TARGET="clang -ffreestanding -march=lm32 -target lm32 -ccc-gcc-name lm32-rtems4.11-gcc" \
+  CC_FOR_BUILD="clang " \
+  PONIES=true \
+  LD=lm32-rtems4.11-ld \
+  OBJCOPY=lm32-rtems4.11-objcopy \
+  RANLIB=lm32-rtems4.11-ranlib \
+  AR=lm32-rtems4.11-ar \
+  AS=lm32-rtems4.11-as && \
+make -j4 && \
+make install )
+
+mkdir libg-bld
+(cd libg-bld && \
+../newlib-1.19.0/libgloss/configure --host=lm32-elf \
+  --prefix=$INSTALL_DIR \
+  CC="clang -march=lm32 -target lm32 -ccc-gcc-name lm32-rtems4.11-gcc" \
+  LD=lm32-rtems4.11-ld \
+  OBJCOPY=lm32-rtems4.11-objcopy \
+  RANLIB=lm32-rtems4.11-ranlib \
+  AR=lm32-rtems4.11-ar \
+  AS=lm32-rtems4.11-as && \
+CFLAGS="-I$INSTALL_DIR/lm32-elf/include/ -ffreestanding" make -j4 && \
+make install )

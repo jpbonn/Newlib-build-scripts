@@ -9,20 +9,6 @@ The Newlib build process depends on the gcc-lm32 tool chain for the linker, asse
         # cd $NEWLIBTOP 
         # make
 
-3)    Make sure the lm32 clang is on your path and then run the j-newlib2 script to do the build:
-        # mkdir $NEWLIBTOP/build
-        # cd $NEWLIBTOP/build
-        # ../j-newlib2
-
-4)    Configure libgloss:
-        # mkdir $NEWLIBTOP/build-libgloss
-        # cd $NEWLIBTOP/build-libgloss
-        # ../j-liblg2
-
-5)    Edit the libgloss Makefile:
-        add $NEWLIBTOP/build/install/lm32-elf/include to the INCLUDES variable in the Makefile
-
-
-6)    Build libgloss:
-        # make ; make install
-
+3)    Run the build-libs script to do the build:
+        # cd $NEWLIBTOP
+        # ./build-libs
