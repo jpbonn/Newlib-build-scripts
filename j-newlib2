@@ -34,8 +34,8 @@ CPU=lm32
   --prefix=`pwd`/install \
   --with-newlib \
   CFLAGS="-O0 -g" \
-  CC="clang -march=lm32 -target lm32 -ccc-gcc-name lm32-rtems4.11-gcc" \
-  CC_FOR_TARGET="clang -march=lm32 -target lm32 -ccc-gcc-name lm32-rtems4.11-gcc" \
+  CC="clang -ffreestanding -march=lm32 -target lm32 -ccc-gcc-name lm32-rtems4.11-gcc" \
+  CC_FOR_TARGET="clang -ffreestanding -march=lm32 -target lm32 -ccc-gcc-name lm32-rtems4.11-gcc" \
   CC_FOR_BUILD="clang " \
   PONIES=true \
   LD=lm32-rtems4.11-ld \
