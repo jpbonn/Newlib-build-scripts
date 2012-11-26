@@ -4,6 +4,7 @@
 #
 # Written 2011 by Xiangfu Liu <xiangfu@sharism.cc>
 # this file try to manager build RTMS toolchain
+# Clang newlib version 2012 by JP Bonn
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,51 +18,85 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-RTEMS_VERSION=4.11
-#make sure you have write access
-RTEMS_PREFIX=`pwd`/install
+RTEMS_VERSION:=4.11
+INSTALL_DIR:=$(shell pwd)/install
 
-RTEMS_SOURCES_URL=http://www.rtems.org/ftp/pub/rtems/SOURCES/$(RTEMS_VERSION)
+RTEMS_SOURCES_URL:=http://www.rtems.org/ftp/pub/rtems/SOURCES/$(RTEMS_VERSION)
 
 # For Mac OS X use curl.
 WGET=wget -c -O 
 # WGET=curl -o 
 
-NEWLIB_VERSION=1.19.0
+NEWLIB_VERSION:=1.19.0
 
-NEWLIB=newlib-$(NEWLIB_VERSION).tar.gz
+NEWLIB:=newlib-$(NEWLIB_VERSION).tar.gz
 
-NEWLIB_PATCH=newlib-$(NEWLIB_VERSION)-rtems$(RTEMS_VERSION)-20111006.diff
+NEWLIB_PATCH:=newlib-$(NEWLIB_VERSION)-rtems$(RTEMS_VERSION)-20111006.diff
 
-DL=$(if $(wildcard ../dl/.),../dl,dl)
+DL:=$(if $(wildcard ../dl/.),../dl,dl)
 
-RTEMS_PATCHES_DIR=rtems-patches
-MM1_PATCHES_DIR=milkymist-one-patches
+RTEMS_PATCHES_DIR:=rtems-patches
+MM1_PATCHES_DIR:=milkymist-one-patches
 
-.PHONY:	all clean install
+.PHONY:	all clean install install-newlib install-libg build-newlib build-libg
 
-all: .compile.newlib.ok 
+all: install
 
-install: .install.newlib.ok
+install: install-newlib install-libg
 
-.install.newlib.ok: .compile.newlib.ok
-	cd build-newlib && make install
-	touch $@
+install-newlib: build-newlib
+	mkdir -p $(INSTALL_DIR)
+	mkdir -p $(INSTALL_DIR)/lib
+	cd build-newlib && \
+	CFLAGS="-ffreestanding" make install
 
-.compile.newlib.ok: .patch.ok gcc-$(GCC_CORE_VERSION)/newlib
-	export PATH=$(RTEMS_PREFIX)/bin:$$PATH
+build-newlib: build-newlib/Makefile
+	cd build-newlib && \
+	CFLAGS="-ffreestanding" make 
+
+install-libg: build-libg
+	mkdir -p $(INSTALL_DIR)
+	mkdir -p $(INSTALL_DIR)/lib
+	cd build-libg && \
+	CFLAGS="-I$(INSTALL_DIR)/lm32-elf/include/ -ffreestanding" make install
+
+build-libg: build-libg/Makefile install-newlib
+	cd build-libg && \
+	CFLAGS="-I$(INSTALL_DIR)/lm32-elf/include/ -ffreestanding" make 
+
+
+build-newlib/Makefile: .patch.ok
 	mkdir -p build-newlib
-	(cd build-newlib/;\
-          ../newlib-$(NEWLIB_VERSION)/configure --target=lm32-rtems4.11 \
-          --with-gnu-as --with-gnu-ld --with-newlib --verbose --enable-threads \
-          --enable-languages="c" --disable-shared --prefix=$(RTEMS_PREFIX); \
-         make all; \
-         make info; \
-	)
-	touch $@
+	(cd build-newlib && \
+	../newlib-1.19.0/configure \
+	  --with-cross-host=x86_64-unknown-linux-gnu --build=x86_64-unknown-linux-gnu \
+	  --host=lm32-elf --target=lm32-elf \
+	  --with-target-subdir=lm32-elf \
+	  --disable-libssp --enable-languages=c \
+	  --prefix=$(INSTALL_DIR) \
+	  --with-newlib \
+	  CFLAGS="-O0 -g" \
+	  CC="clang -ffreestanding -march=lm32 -target lm32 -ccc-gcc-name lm32-rtems4.11-gcc" \
+	  CC_FOR_TARGET="clang -ffreestanding -march=lm32 -target lm32 -ccc-gcc-name lm32-rtems4.11-gcc" \
+	  CC_FOR_BUILD="clang " \
+	  PONIES=true \
+	  LD=lm32-rtems4.11-ld \
+	  OBJCOPY=lm32-rtems4.11-objcopy \
+	  RANLIB=lm32-rtems4.11-ranlib \
+	  AR=lm32-rtems4.11-ar \
+	  AS=lm32-rtems4.11-as )
 
-gcc-$(GCC_CORE_VERSION)/newlib: .unzip.ok
-#	(cd gcc-$(GCC_CORE_VERSION); ln -s ../newlib-$(NEWLIB_VERSION)/newlib;)
+build-libg/Makefile: .patch.ok
+	mkdir -p build-libg
+	(cd build-libg && \
+	../newlib-1.19.0/libgloss/configure --host=lm32-elf \
+	  --prefix=$(INSTALL_DIR) \
+	  CC="clang -march=lm32 -target lm32 -ccc-gcc-name lm32-rtems4.11-gcc" \
+	  LD=lm32-rtems4.11-ld \
+	  OBJCOPY=lm32-rtems4.11-objcopy \
+	  RANLIB=lm32-rtems4.11-ranlib \
+	  AR=lm32-rtems4.11-ar \
+	  AS=lm32-rtems4.11-as ) 
 
 .patch.ok: .unzip.ok $(RTEMS_PATCHES_DIR)/.ok
 	(cd newlib-$(NEWLIB_VERSION); cat ../$(RTEMS_PATCHES_DIR)/$(NEWLIB_PATCH) | patch -p1)
@@ -81,7 +116,17 @@ $(DL)/$(NEWLIB).ok:
 	$(WGET) $(DL)/$(NEWLIB) $(RTEMS_SOURCES_URL)/$(NEWLIB)
 	touch $@
 
+clean-libg:
+	rm -rf build-libg
+	rm -rf .compile.libg.ok
+	rm -rf .install.libg.ok
+
+clean-newlib:
+	rm -rf build-newlib
+	rm -rf .compile.newlib.ok
+	rm -rf .install.newlib.ok
+
 clean:
-	rm -rf newlib-$(NEWLIB_VERSION)
+	rm -rf newlib-$(NEWLIB_VERSION) build-libg build-newlib
 	rm -rf .*.ok
 	rm -rf .ok
