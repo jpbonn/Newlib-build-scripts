@@ -1,4 +1,4 @@
-These scripts build newlib for the LM32 using Clang.
+These scripts build newlib (libc and libm) and libgloss (libg) for the LM32 using Clang.
 
 The Newlib build process depends on the gcc-lm32 tool chain for the linker, assembler and ranlib so those tools should be built first. The steps to build newlib are as follows:
 
@@ -9,6 +9,4 @@ The Newlib build process depends on the gcc-lm32 tool chain for the linker, asse
         # cd $NEWLIBTOP 
         # make
 
-3)    Run the build-libs script to do the build:
-        # cd $NEWLIBTOP
-        # ./build-libs
+Files will be installed to $NEWLIBTOP/install.
