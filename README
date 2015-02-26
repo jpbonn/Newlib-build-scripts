@@ -5,7 +5,7 @@ The Newlib build process depends on the gcc-lm32 tool chain for the linker, asse
 1)    checkout the newlib scripts to directory of your choice: $NEWLIBTOP.
         # git clone git@github.com:jpbonn/Newlib-build-scripts.git $NEWLIBTOP
 
-2)    Run the downloaded Makefile. It will download the newlib source code and apply the required patches from the Milkymist repository.
+2)    Run the downloaded Makefile. It will download the newlib source code.
         # cd $NEWLIBTOP 
         # make
 
