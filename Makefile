@@ -44,6 +44,7 @@ build-newlib/Makefile: .unzip.ok
 	AR_FOR_TARGET=lm32-elf-ar \
 	AS_FOR_TARGET=lm32-elf-as \
 	LD_FOR_TARGET=lm32-elf-ld \
+	CFLAGS_FOR_TARGET=" -O0 -g " \
 	RANLIB_FOR_TARGET=lm32-elf-ranlib \
 	CC_FOR_TARGET="clang -ffreestanding -target lm32-elf -ccc-gcc-name lm32-elf-gcc" )
 
